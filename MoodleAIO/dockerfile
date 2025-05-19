@@ -28,7 +28,7 @@ WORKDIR /var/www/html
 RUN rm -rf index.html && mkdir -p moodledata
 
 # Download Moodle (latest stable)
-RUN curl -LO https://download.moodle.org/latest.zip \
+RUN curl -LO https://download.moodle.org/download.php/stable500/moodle-latest-500.zip \
     && unzip latest.zip \
     && rm latest.zip \
     && chown -R www-data:www-data /var/www/html/moodle /var/www/html/moodledata
