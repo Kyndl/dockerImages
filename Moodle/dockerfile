@@ -1,0 +1,37 @@
+# Use the official PHP image with Apache
+FROM php:8.2-apache
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    libxml2-dev \
+    libonig-dev \
+    libicu-dev \
+    git \
+    unzip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd zip xml intl mbstring opcache
+
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
+
+# Set recommended PHP settings
+COPY moodle-php.ini /usr/local/etc/php/conf.d/
+
+# Download Moodle (replace version as needed)
+ENV MOODLE_VERSION=4.3.3
+RUN curl -o /tmp/moodle.tgz -L https://download.moodle.org/download.php/direct/stable43/moodle-latest-43.tgz \
+    && tar -xzf /tmp/moodle.tgz -C /var/www/html --strip-components=1 \
+    && rm /tmp/moodle.tgz
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html
+
+# Expose port 80
+EXPOSE 80
+
+# Healthcheck (optional)
+HEALTHCHECK CMD curl --fail http://localhost/ || exit 1
