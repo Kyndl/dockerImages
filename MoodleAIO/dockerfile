@@ -1,0 +1,44 @@
+# Use an official PHP image with Apache
+FROM php:8.1-apache
+
+# Install required system packages and PHP extensions
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    libxml2-dev \
+    libonig-dev \
+    libicu-dev \
+    libmariadb-dev \
+    libxslt1-dev \
+    mariadb-client \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) gd mysqli pdo pdo_mysql zip intl xml soap xsl opcache mbstring \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
+
+# Set up Moodle
+WORKDIR /var/www/html
+RUN rm -rf index.html && mkdir -p moodledata
+
+# Download Moodle (latest stable)
+RUN curl -LO https://download.moodle.org/latest.zip \
+    && unzip latest.zip \
+    && rm latest.zip \
+    && chown -R www-data:www-data /var/www/html/moodle /var/www/html/moodledata
+
+# Set Moodle as DocumentRoot
+ENV MOODLE_DIR=/var/www/html/moodle
+ENV MOODLE_DATA=/var/www/html/moodledata
+ENV APACHE_DOCUMENT_ROOT=$MOODLE_DIR
+
+# Change Apache DocumentRoot
+RUN sed -i "s|DocumentRoot /var/www/html|DocumentRoot $MOODLE_DIR|g" /etc/apache2/sites-available/000-default.conf
+
+EXPOSE 80
