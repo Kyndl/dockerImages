@@ -1,4 +1,4 @@
-# Use an official PHP image with Apache
+# Use official PHP image with Apache
 FROM php:8.2-apache
 
 # Install required system packages and PHP extensions
@@ -23,11 +23,11 @@ RUN apt-get update && apt-get install -y \
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
-# Set up Moodle
+# Set working directory and prepare folders
 WORKDIR /var/www/html
-RUN rm -rf index.html && mkdir -p moodledata
+RUN rm -f index.html && mkdir -p moodledata
 
-# Download Moodle (latest stable)
+# Download and install Moodle
 RUN curl -LO https://download.moodle.org/download.php/direct/stable500/moodle-latest-500.zip \
     && unzip moodle-latest-500.zip \
     && rm moodle-latest-500.zip \
@@ -40,5 +40,8 @@ ENV APACHE_DOCUMENT_ROOT=$MOODLE_DIR
 
 # Change Apache DocumentRoot
 RUN sed -i "s|DocumentRoot /var/www/html|DocumentRoot $MOODLE_DIR|g" /etc/apache2/sites-available/000-default.conf
+
+# Copy custom PHP config
+COPY moodle-php.ini /usr/local/etc/php/conf.d/moodle-php.ini
 
 EXPOSE 80
